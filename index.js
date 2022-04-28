@@ -11,7 +11,7 @@ const app = new App({
 
 //Add code here
 app.event("app_home_opened", ({ event, say }) => {
-    console.log(`Hello, <@${event.user}>! 😄`);
+  console.log(`Hello, <@${event.user}>! 😄`);
   say(`Hello, <@${event.user}>! 😄`);
 });
 
@@ -19,7 +19,32 @@ app.event("app_home_opened", ({ event, say }) => {
 app.message("hello", async ({ message, say }) => {
   // say() sends a message to the channel where the event was triggered
   console.log(`Hey there <@${message.user}>!`);
-  await say(`Hey there <@${message.user}>!`);
+  await say({
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `Hey there <@${message.user}>!`,
+        },
+        accessory: {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Click Me",
+          },
+          action_id: "button_click",
+        },
+      },
+    ],
+    text: `Hey there <@${message.user}>!`,
+  });
+});
+
+app.action("button_click", async ({ body, ack, say }) => {
+  // Acknowledge the action
+  await ack();
+  await say(`<@${body.user.id}> clicked the button`);
 });
 
 (async () => {
