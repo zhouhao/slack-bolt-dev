@@ -1,4 +1,4 @@
-const { App } = require("@slack/bolt");
+const {App} = require("@slack/bolt");
 
 // Initializes your app with your bot token and signing secret
 const app = new App({
@@ -10,13 +10,35 @@ const app = new App({
 });
 
 //Add code here
-app.event("app_home_opened", ({ event, say }) => {
+app.event("app_home_opened", async ({event, say}) => {
   console.log(`Hello, <@${event.user}>! 😄`);
-  say(`Hello, <@${event.user}>! 😄`);
+  await say(`Hello, <@${event.user}>! 😄`);
+});
+
+app.event("link_shared", async ({event, say}) => {
+  console.log(`link_shared, ${JSON.stringify(event)}! 😄`);
+  await say(`Hello, <@${event.user}> ${event.links[0].url}! 😄`);
+  await app.client.chat.unfurl({
+    channel: event.channel,
+    ts: event.message_ts,
+    unfurls: {
+      [event.links[0].url]: {
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": `*Hello, <@${event.user}>!*`
+            }
+          }
+        ]
+      }
+    }
+  });
 });
 
 // Listens to incoming messages that contain "hello"
-app.message("hello", async ({ message, say }) => {
+app.message("hello", async ({message, say}) => {
   // say() sends a message to the channel where the event was triggered
   console.log(`Hey there <@${message.user}>!`);
   await say({
@@ -41,7 +63,7 @@ app.message("hello", async ({ message, say }) => {
   });
 });
 
-app.action("button_click", async ({ body, ack, say }) => {
+app.action("button_click", async ({body, ack, say}) => {
   // Acknowledge the action
   await ack();
   await say(`<@${body.user.id}> clicked the button`);
