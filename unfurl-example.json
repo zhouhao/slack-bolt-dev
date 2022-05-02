@@ -1,0 +1,44 @@
+{
+  "https://noteforce.herokuapp.com/": {
+    "blocks": [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*Let's pretend we're on a rocket ship to Neptune.*\nThe planet Neptune looms near. What do you want to do?"
+        },
+        "accessory": {
+          "type": "button",
+          "action_id": "orbit",
+          "text": {
+            "type": "plain_text",
+            "text": "Orbit"
+          },
+          "style": "primary"
+        }
+      },
+      {
+        "type": "actions",
+        "elements": [
+          {
+            "type": "button",
+            "action_id": "land",
+            "text": {
+              "type": "plain_text",
+              "text": "Attempt to land"
+            }
+          },
+          {
+            "type": "button",
+            "action_id": "destruct",
+            "text": {
+              "type": "plain_text",
+              "text": "Self-destruct"
+            },
+            "style": "danger"
+          }
+        ]
+      }
+    ]
+  }
+}
