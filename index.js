@@ -9,6 +9,17 @@ const app = new App({
   port: process.env.PORT || 3333,
 });
 
+const getDatetime = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+  const second = date.getSeconds();
+  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+};
+
 //Add code here
 app.event("app_home_opened", async ({event, say}) => {
   console.log(`Hello, <@${event.user}>! 😄`);
@@ -23,13 +34,35 @@ app.event("link_shared", async ({event, say}) => {
     ts: event.message_ts,
     unfurls: {
       [event.links[0].url]: {
-        "blocks": [
+        blocks: [
           {
-            "type": "section",
-            "text": {
-              "type": "mrkdwn",
-              "text": `*Hello, <@${event.user}>!*`
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*Current Datetime:*\n ${await getDatetime()}`,
             }
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "action_id": "refresh_button_click",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Refresh"
+                }
+              },
+              {
+                "type": "button",
+                "action_id": "remove_button_click",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Remove"
+                },
+                "style": "danger"
+              }
+            ]
           }
         ]
       }
@@ -67,6 +100,73 @@ app.action("button_click", async ({body, ack, say}) => {
   // Acknowledge the action
   await ack();
   await say(`<@${body.user.id}> clicked the button`);
+});
+
+app.action("refresh_button_click", async ({body, ack, say}) => {
+  // Acknowledge the action
+  console.warn(JSON.stringify(body));
+  await ack();
+  await app.client.chat.unfurl({
+    channel: body.container.channel_id,
+    ts: body.container.message_ts,
+    unfurls: {
+      [body.container.app_unfurl_url]: {
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*Current Datetime:*\n ${await getDatetime()}`,
+            }
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "action_id": "refresh_button_click",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Refresh"
+                }
+              },
+              {
+                "type": "button",
+                "action_id": "remove_button_click",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Remove"
+                },
+                "style": "danger"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  });
+});
+
+app.action("remove_button_click", async ({body, ack, say}) => {
+  // Acknowledge the action
+  await ack();
+  await app.client.chat.unfurl({
+    channel: body.container.channel_id,
+    ts: body.container.message_ts,
+    unfurls: {
+      [body.container.app_unfurl_url]: {
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `🗑`,
+            }
+          }
+        ]
+      }
+    }
+  });
 });
 
 (async () => {
