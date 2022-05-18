@@ -2,11 +2,15 @@ const {App} = require("@slack/bolt");
 
 // Initializes your app with your bot token and signing secret
 const app = new App({
-  token: process.env.SLACK_BOT_TOKEN,
-  signingSecret: process.env.SLACK_SIGNING_SECRET,
+  token: process.env.DEV_SLACK_BOT_TOKEN,
+  signingSecret: process.env.DEV_SLACK_SIGNING_SECRET,
   socketMode: true,
-  appToken: process.env.SLACK_APP_TOKEN,
+  appToken: process.env.DEV_SLACK_APP_TOKEN,
   port: process.env.PORT || 3333,
+  clientOptions: {
+    slackApiUrl: "https://dev.slack.com/api/",
+  },
+  // developerMode: true
 });
 
 const getDatetime = () => {
@@ -20,26 +24,18 @@ const getDatetime = () => {
   return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 };
 
-//Add code here
-app.event("app_home_opened", async ({event, say}) => {
-  console.log(`Hello, <@${event.user}>! 😄`);
-  await say(`Hello, <@${event.user}>! 😄`);
-});
-
-app.event("link_shared", async ({event, say}) => {
-  console.log(`link_shared, ${JSON.stringify(event)}! 😄`);
-  await say(`Hello, <@${event.user}> ${event.links[0].url}! 😄`);
+const unfurl = async (channel, ts, link) => {
   await app.client.chat.unfurl({
-    channel: event.channel,
-    ts: event.message_ts,
+    channel: channel,
+    ts: ts,
     unfurls: {
-      [event.links[0].url]: {
+      [link]: {
         blocks: [
           {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `*Current Datetime:*\n ${await getDatetime()}`,
+              text: `*Current Datetime:*\n ${getDatetime()}`,
             }
           },
           {
@@ -68,6 +64,18 @@ app.event("link_shared", async ({event, say}) => {
       }
     }
   });
+};
+
+//Add code here
+app.event("app_home_opened", async ({event, say}) => {
+  console.log(`Hello, <@${event.user}>! 😄`);
+  await say(`Hello, <@${event.user}>! 😄`);
+});
+
+app.event("link_shared", async ({event, say}) => {
+  console.log(`link_shared, ${JSON.stringify(event)}! 😄`);
+  await say(`Hello, <@${event.user}> ${event.links[0].url}! 😄`);
+  await unfurl(event.channel, event.message_ts, event.links[0].url);
 });
 
 // Listens to incoming messages that contain "hello"
@@ -106,45 +114,7 @@ app.action("refresh_button_click", async ({body, ack, say}) => {
   // Acknowledge the action
   console.warn(JSON.stringify(body));
   await ack();
-  await app.client.chat.unfurl({
-    channel: body.container.channel_id,
-    ts: body.container.message_ts,
-    unfurls: {
-      [body.container.app_unfurl_url]: {
-        blocks: [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: `*Current Datetime:*\n ${await getDatetime()}`,
-            }
-          },
-          {
-            "type": "actions",
-            "elements": [
-              {
-                "type": "button",
-                "action_id": "refresh_button_click",
-                "text": {
-                  "type": "plain_text",
-                  "text": "Refresh"
-                }
-              },
-              {
-                "type": "button",
-                "action_id": "remove_button_click",
-                "text": {
-                  "type": "plain_text",
-                  "text": "Remove"
-                },
-                "style": "danger"
-              }
-            ]
-          }
-        ]
-      }
-    }
-  });
+  await unfurl(body.container.channel_id, body.container.message_ts, body.container.app_unfurl_url);
 });
 
 app.action("remove_button_click", async ({body, ack, say}) => {
